@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Northwick Airway Navigator — Prototype</title>
+<style>
+  :root{
+    --bg:#eef3f7; --panel:#ffffff; --ink:#17202a; --muted:#607080; --line:#d7e0e8;
+    --blue:#1f5f8b; --blue2:#0f3d5e; --green:#e7f6ec; --greenText:#146b35;
+    --amber:#fff4d8; --amberText:#8a5a00; --red:#fde7e7; --redText:#a4262c; --black:#202124; --blackText:#fff;
+    --chip:#f4f7fa; --shadow:0 10px 30px rgba(24,39,75,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(135deg,#f7fafc,#e9f0f6);color:var(--ink);}
+  body::before{content:"PROTOTYPE • NOT FOR CLINICAL USE";position:fixed;left:-180px;top:48%;transform:rotate(-32deg);font-size:54px;font-weight:800;letter-spacing:4px;color:rgba(31,95,139,.07);pointer-events:none;z-index:0;white-space:nowrap;}
+  header{background:linear-gradient(135deg,var(--blue2),var(--blue));color:white;padding:22px 18px 18px;position:relative;z-index:1;box-shadow:var(--shadow)}
+  header .wrap{max-width:1180px;margin:0 auto;}
+  h1{margin:0;font-size:28px;line-height:1.1;letter-spacing:-.3px}
+  .subtitle{margin-top:8px;font-size:15px;opacity:.92;max-width:900px;}
+  main{max-width:1180px;margin:20px auto;padding:0 14px 40px;position:relative;z-index:1;}
+  .grid{display:grid;grid-template-columns:420px 1fr;gap:18px;align-items:start}
+  @media (max-width:980px){.grid{grid-template-columns:1fr}.sticky{position:static!important}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .card h2{font-size:18px;margin:0;padding:16px 18px;border-bottom:1px solid var(--line);background:#fbfdff}
+  .section{padding:16px 18px;border-bottom:1px solid var(--line)}
+  .section:last-child{border-bottom:0}
+  label{display:block;font-weight:650;font-size:14px;margin:0 0 7px;color:#22313f}
+  select, textarea{width:100%;border:1px solid #cbd7e2;border-radius:10px;padding:10px 11px;font-size:15px;background:white;color:var(--ink)}
+  textarea{min-height:74px;resize:vertical}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.35}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:560px){.row{grid-template-columns:1fr}}
+  .choiceGroup{display:flex;flex-wrap:wrap;gap:8px;margin-top:7px}
+  .choice{border:1px solid #ccd7e2;background:var(--chip);padding:8px 10px;border-radius:999px;font-size:13.5px;cursor:pointer;user-select:none;transition:.12s ease all}
+  .choice input{display:none}
+  .choice:has(input:checked){background:#dceeff;border-color:#6da8d6;color:#0b4d78;font-weight:700;box-shadow:0 0 0 2px rgba(31,95,139,.08) inset}
+  .multi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+  @media (max-width:560px){.multi{grid-template-columns:1fr}}
+  .check{border:1px solid #ccd7e2;background:#fbfdff;padding:9px 10px;border-radius:10px;font-size:13.5px;cursor:pointer;display:flex;gap:8px;align-items:flex-start}
+  .check input{margin-top:2px}
+  .sticky{position:sticky;top:12px}
+  .outputTop{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:16px 18px;border-bottom:1px solid var(--line);background:#fbfdff}
+  .badge{border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px;letter-spacing:.2px;text-transform:uppercase}
+  .badge.green{background:var(--green);color:var(--greenText)} .badge.amber{background:var(--amber);color:var(--amberText)} .badge.red{background:var(--red);color:var(--redText)} .badge.black{background:var(--black);color:var(--blackText)}
+  .scoreBox{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+  @media (max-width:720px){.scoreBox{grid-template-columns:1fr}}
+  .metric{background:#f7fafc;border:1px solid #e0e8ef;border-radius:12px;padding:11px}
+  .metric .num{font-size:26px;font-weight:850;color:var(--blue2)}
+  .metric .cap{font-size:12.5px;color:var(--muted);margin-top:1px}
+  .panel{padding:16px 18px;border-bottom:1px solid var(--line)}
+  .panel h3{margin:0 0 8px;font-size:16px;color:#192b3a}
+  .panel p{margin:6px 0;line-height:1.45}
+  ul{margin:8px 0 0 20px;padding:0} li{margin:5px 0;line-height:1.38}
+  .planGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
+  @media (max-width:720px){.planGrid{grid-template-columns:1fr}}
+  .plan{border:1px solid #dce5ed;border-radius:12px;padding:12px;background:#fbfdff}
+  .plan strong{display:block;margin-bottom:4px;color:var(--blue2)}
+  .disclaimer{border-left:5px solid #a4262c;background:#fff8f8;padding:12px 14px;border-radius:10px;font-size:13.5px;line-height:1.42}
+  .buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  button{border:0;background:var(--blue);color:white;border-radius:10px;padding:10px 12px;font-weight:750;cursor:pointer;font-size:14px}
+  button.secondary{background:#eef3f7;color:#17324a;border:1px solid #cbd7e2}
+  button:active{transform:translateY(1px)}
+  .small{font-size:12.5px;color:var(--muted);line-height:1.35}
+  .refs a{color:#0b5f94;text-decoration:none}.refs a:hover{text-decoration:underline}
+  .hidden{display:none!important}
+  .empty{padding:42px 28px;text-align:center;color:var(--muted)}
+  .empty strong{display:block;color:#263747;font-size:20px;margin-bottom:8px}
+  .logic{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f5f7f9;border:1px solid #dce5ed;border-radius:12px;padding:12px;white-space:pre-wrap;font-size:12px;color:#273849;max-height:260px;overflow:auto}
+  @media print{header,.inputCard,.buttons,.refs,.logicBlock{display:none!important} main{max-width:100%;margin:0;padding:0}.grid{display:block}.card{box-shadow:none;border:0}.outputCard{border:0} body::before{display:none}.panel,.scoreBox,.outputTop{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Northwick Airway Navigator — Prototype</h1>
+    <div class="subtitle">Structured pre-brief for difficult airway decisions. Explicitly separates patient airway risk from team, kit, location and backup. Local demonstrator only.</div>
+  </div>
+</header>
+<main>
+  <div class="grid">
+    <div class="card inputCard">
+      <h2>1. Select clinical scenario</h2>
+      <div class="section">
+        <label for="scenario">Airway scenario</label>
+        <select id="scenario">
+          <option value="">Select airway scenario…</option>
+          <option value="anticipated">Anticipated difficult airway — awake vs asleep strategy</option>
+          <option value="icu">Critically ill ICU intubation — module scaffold</option>
+          <option value="extubation">At-risk extubation — module scaffold</option>
+        </select>
+        <div class="hint">This prototype currently has working logic for the anticipated difficult airway module. ICU intubation and extubation are included as placeholders for later local build-out.</div>
+      </div>
+
+      <div id="anticipatedInputs" class="hidden">
+        <h2>2. Patient airway risk</h2>
+        <div class="section">
+          <label>Oxygenation reserve / physiological risk</label><div class="choiceGroup" data-name="oxygenation"></div>
+          <div class="hint">Examples: obesity/OSA, severe hypoxaemia, pregnancy, sepsis, raised oxygen demand.</div>
+        </div>
+        <div class="section">
+          <label>Predicted laryngoscopy / intubation difficulty</label><div class="choiceGroup" data-name="laryngoscopy"></div>
+        </div>
+        <div class="section">
+          <label>Rescue facemask / supraglottic airway oxygenation</label><div class="choiceGroup" data-name="rescue"></div>
+        </div>
+        <div class="section row">
+          <div><label>Aspiration risk</label><div class="choiceGroup" data-name="aspiration"></div></div>
+          <div><label>Front-of-neck access</label><div class="choiceGroup" data-name="fona"></div></div>
+        </div>
+        <div class="section">
+          <label>Airway phenotype / complicating features</label>
+          <div class="multi" id="phenotypes"></div>
+        </div>
+
+        <h2>3. Environment and team risk</h2>
+        <div class="section row">
+          <div><label>Urgency</label><div class="choiceGroup" data-name="urgency"></div></div>
+          <div><label>Location</label><div class="choiceGroup" data-name="location"></div></div>
+        </div>
+        <div class="section">
+          <label>Senior airway operator / consultant airway expertise</label><div class="choiceGroup" data-name="senior"></div>
+        </div>
+        <div class="section">
+          <label>Airway equipment immediately available and checked</label><div class="choiceGroup" data-name="kit"></div>
+        </div>
+        <div class="section row">
+          <div><label>ENT / maxfax / tracheostomy backup</label><div class="choiceGroup" data-name="backup"></div></div>
+          <div><label>Time / system pressure</label><div class="choiceGroup" data-name="time"></div></div>
+        </div>
+        <div class="section">
+          <label>Post-procedure destination and monitoring</label><div class="choiceGroup" data-name="destination"></div>
+        </div>
+        <div class="section">
+          <label for="notes">Optional clinical notes for team discussion</label>
+          <textarea id="notes" placeholder="Example: fixed flexion deformity, previous radiotherapy, bleeding tumour, failed previous VL, ICU bed status…"></textarea>
+          <div class="buttons"><button id="resetBtn" class="secondary">Reset</button><button id="printBtn">Print / save briefing card</button></div>
+        </div>
+      </div>
+
+      <div id="scaffoldInputs" class="hidden section">
+        <div class="disclaimer"><strong>Module scaffold only.</strong><br>This scenario is intentionally not yet scored. Use it to discuss scope, inputs and local logic before adding operational recommendations.</div>
+      </div>
+    </div>
+
+    <div class="card outputCard sticky">
+      <div id="output"></div>
+    </div>
+  </div>
+</main>
+<script>
+const CONFIG = {
+  oxygenation:[['low','Low',0],['moderate','Moderate',1],['high','High',2]],
+  laryngoscopy:[['unlikely','Unlikely',0],['possible','Possible',1],['likely','Likely',2]],
+  rescue:[['likely','Likely',0],['uncertain','Uncertain',1],['unlikely','Unlikely',2]],
+  aspiration:[['low','Low',0],['high','High',1]],
+  fona:[['accessible','Accessible',0],['difficult','Difficult',1],['impossible','Impossible / uncertain',2]],
+  urgency:[['elective','Elective',0],['urgent','Urgent today',1],['immediate','Immediate threat',2]],
+  location:[['theatre','Main theatre',0],['icu','ICU',1],['remote','Remote site / ED',2]],
+  senior:[['present','Present',0],['available','Available but not present',1],['absent','Not available',3]],
+  kit:[['full','Full kit checked',0],['partial','Partial / uncertain',2],['absent','Absent',4]],
+  backup:[['present','Present',0],['available','Available',1],['notavailable','Not available',2]],
+  time:[['inHours','In hours / stable system',0],['outHours','Out of hours / pressure',1]],
+  destination:[['clear','Clear',0],['uncertain','Uncertain',1],['notclear','Not clear',2]]
+};
+const PHENOTYPES = [
+  ['obesityOSA','Obesity / OSA',1], ['trismus','Trismus / limited mouth opening',2], ['neckRadiation','Radiotherapy / fixed neck',2],
+  ['airwayTumour','Airway tumour / distortion',2], ['bleeding','Bleeding / friable airway',2], ['infection','Airway infection / swelling',2],
+  ['cspine','C-spine immobility',1], ['burns','Burns / progressive oedema',2], ['previousFail','Previous failed intubation',2], ['none','None selected',0]
+];
+function buildChoices(){
+  Object.entries(CONFIG).forEach(([name,opts])=>{
+    const el=document.querySelector(`[data-name="${name}"]`); if(!el) return;
+    el.innerHTML=opts.map((o,i)=>`<label class="choice"><input type="radio" name="${name}" value="${o[0]}" ${i===0?'checked':''}>${o[1]}</label>`).join('');
+  });
+  document.getElementById('phenotypes').innerHTML = PHENOTYPES.map(p=>`<label class="check"><input type="checkbox" name="phenotype" value="${p[0]}"> <span>${p[1]}</span></label>`).join('');
+}
+function val(name){const n=document.querySelector(`input[name="${name}"]:checked`);return n?n.value:null}
+function scoreOf(name){const v=val(name);return (CONFIG[name].find(x=>x[0]===v)||[null,null,0])[2]}
+function labelOf(name){const v=val(name);return (CONFIG[name].find(x=>x[0]===v)||[null,'',0])[1]}
+function selectedPhenotypes(){return [...document.querySelectorAll('input[name="phenotype"]:checked')].map(x=>x.value).filter(v=>v!=='none')}
+function phenotypeScore(){return selectedPhenotypes().reduce((s,v)=>s+(PHENOTYPES.find(p=>p[0]===v)||[null,null,0])[2],0)}
+function phenotypeLabels(){return selectedPhenotypes().map(v=>(PHENOTYPES.find(p=>p[0]===v)||[null,''])[1])}
+function cap(n,max){return Math.min(n,max)}
+function riskClass(total, patient, env, critical){
+  if(critical) return ['black','Emergency / failed-airway posture'];
+  if(patient>=8 || env>=7 || total>=13) return ['red','Red — conditions not aligned with stated risk'];
+  if(patient>=5 || env>=4 || total>=8) return ['amber','Amber — senior-led optimisation required'];
+  return ['green','Green — standard pathway, but explicit brief still required'];
+}
+function compute(){
+  const patient = cap(scoreOf('oxygenation')+scoreOf('laryngoscopy')+scoreOf('rescue')+scoreOf('aspiration')+scoreOf('fona')+phenotypeScore(), 14);
+  const env = cap(scoreOf('urgency')+scoreOf('location')+scoreOf('senior')+scoreOf('kit')+scoreOf('backup')+scoreOf('time')+scoreOf('destination'), 15);
+  const total=patient+env;
+  const critical = val('urgency')==='immediate' && (val('rescue')==='unlikely' || val('oxygenation')==='high') && val('kit')==='absent';
+  const rc=riskClass(total,patient,env,critical);
+  return {patient,env,total,klass:rc[0],label:rc[1]};
+}
+function posture(){
+  const r=compute();
+  const difficult = val('laryngoscopy')==='likely' || phenotypeScore()>=3;
+  const rescueBad = val('rescue')!=='likely';
+  const fonaBad = val('fona')!=='accessible';
+  const envBad = r.env>=4;
+  if(r.klass==='black') return 'Immediate oxygenation priority. Treat as emergency airway risk. Declare the situation, call senior help, prepare rescue oxygenation and emergency front-of-neck access before further attempts unless already in a rescue sequence.';
+  if(difficult && rescueBad) return 'Awake tracheal intubation or another awake/semi-awake airway-securing strategy should be strongly favoured. Do not induce anaesthesia until rescue oxygenation, FONA feasibility, equipment and senior operator presence have been explicitly resolved.';
+  if(difficult && fonaBad) return 'High-consequence anticipated difficult airway. Consider awake strategy, location upgrade, second senior operator and surgical airway/ENT support before induction.';
+  if(envBad) return 'Patient risk may be manageable, but the environment is not yet aligned. Optimise location, operator, assistant, kit and backup before proceeding unless there is an immediate life threat.';
+  if(r.klass==='amber') return 'Proceed only after a documented airway brief with named Plan A/B/C/D, stop points and rescue roles. Senior review is advised.';
+  return 'An asleep technique may be reasonable if standard assessment remains reassuring, but an explicit Plan A/B/C/D and rescue oxygenation plan should still be verbalised.';
+}
+function conditions(){
+  let arr=['Named airway lead and named assistant','Capnography and full monitoring','Preoxygenation plan and apnoeic oxygenation considered','Video laryngoscope and alternative device strategy available','Suction checked and immediately reachable','FONA kit visible, checked, and operator named','Maximum attempts and stop/go triggers agreed','Post-procedure destination and monitoring agreed'];
+  if(val('senior')!=='present') arr.unshift('Consultant / senior airway operator physically present before proceeding');
+  if(val('kit')!=='full') arr.unshift('Required airway kit must be present, opened/checked and familiar to the team');
+  if(val('backup')!=='present' && (val('fona')!=='accessible' || phenotypeScore()>=3)) arr.unshift('ENT/maxfax/tracheostomy support discussed and route to immediate help clarified');
+  if(val('location')!=='theatre') arr.unshift('Consider moving to main theatre or equivalent controlled environment if time allows');
+  return [...new Set(arr)];
+}
+function redFlags(){
+  let arr=[];
+  if(val('rescue')==='unlikely') arr.push('Rescue facemask/SGA oxygenation judged unlikely');
+  if(val('fona')!=='accessible') arr.push('Front-of-neck access difficult or uncertain');
+  if(val('oxygenation')==='high') arr.push('Low oxygenation reserve / high physiological risk');
+  if(val('kit')!=='full') arr.push('Airway kit incomplete or not checked');
+  if(val('senior')==='absent') arr.push('No senior airway operator available');
+  if(phenotypeScore()>=4) arr.push('Multiple high-risk airway phenotype features selected');
+  if(val('destination')!=='clear') arr.push('Post-procedure destination or monitoring unclear');
+  if(arr.length===0) arr.push('No major red flags selected, but this does not exclude unrecognised difficult airway risk.');
+  return arr;
+}
+function planABCD(){
+  const awakeFavoured = (val('laryngoscopy')==='likely' && val('rescue')!=='likely') || phenotypeScore()>=4 || val('fona')==='impossible';
+  return {
+    A: awakeFavoured ? 'Primary plan: awake tracheal intubation / awake airway-securing strategy with topicalisation, minimal sedation and oxygenation plan.' : 'Primary plan: agreed intubation technique, preferably with VL available and first attempt optimised.',
+    B: 'Rescue oxygenation: facemask optimisation, adjuncts, two-person technique, SGA strategy; stop repeated attempts early.',
+    C: awakeFavoured ? 'Pause/wake/defer if feasible: do not drift into asleep repeated attempts without rescue oxygenation confidence.' : 'Wake/defer/proceed without tracheal intubation only after explicit risk-benefit decision by senior clinician.',
+    D: 'Emergency FONA: role named, kit visible, cricothyroid membrane/FONA feasibility considered before starting.'
+  }
+}
+function render(){
+  const scenario=document.getElementById('scenario').value;
+  const out=document.getElementById('output');
+  if(!scenario){ out.innerHTML=`<div class="empty"><strong>Awaiting scenario selection</strong>Select a module to generate a structured airway pre-brief.</div>`; return; }
+  if(scenario!=='anticipated'){
+    const title=scenario==='icu'?'Critically ill ICU intubation':'At-risk extubation';
+    const text=scenario==='icu'?'Suggested future inputs: oxygenation reserve, haemodynamic instability, aspiration risk, location, operator, assistant, checklist completion, VL availability, vasopressor/induction readiness, failed-airway rescue and post-intubation ventilation plan.':'Suggested future inputs: airway swelling/bleeding, reintubation difficulty, oxygenation reserve, airway exchange catheter strategy, theatre/ICU location, senior presence, ENT backup and post-extubation observation.';
+    out.innerHTML=`<div class="outputTop"><span class="badge amber">Scaffold</span><strong>${title}</strong></div><div class="panel"><h3>Not yet scored</h3><p>${text}</p><p class="small">This placeholder is deliberately conservative: no clinical recommendation is generated until the local logic is agreed.</p></div>${disclaimerBlock()}${refsBlock()}`;return;
+  }
+  const r=compute(); const p=planABCD(); const phen=phenotypeLabels();
+  out.innerHTML=`
+    <div class="outputTop"><span class="badge ${r.klass}">${r.label}</span><strong>Anticipated difficult airway: pre-brief card</strong></div>
+    <div class="scoreBox"><div class="metric"><div class="num">${r.patient}</div><div class="cap">Patient airway risk score</div></div><div class="metric"><div class="num">${r.env}</div><div class="cap">Environment / team risk score</div></div><div class="metric"><div class="num">${r.total}</div><div class="cap">Combined prompt score</div></div></div>
+    <div class="panel"><h3>Suggested posture</h3><p>${posture()}</p></div>
+    <div class="panel"><h3>Selected phenotype</h3><p>${phen.length?phen.join('; '):'None selected.'}</p><p class="small">Oxygenation: ${labelOf('oxygenation')} · Laryngoscopy: ${labelOf('laryngoscopy')} · Rescue oxygenation: ${labelOf('rescue')} · FONA: ${labelOf('fona')} · Location: ${labelOf('location')} · Senior support: ${labelOf('senior')} · Kit: ${labelOf('kit')}</p></div>
+    <div class="panel"><h3>Minimum conditions before proceeding</h3><ul>${conditions().map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="panel"><h3>Red flags / escalation triggers</h3><ul>${redFlags().map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="panel"><h3>Plan A/B/C/D verbal brief</h3><div class="planGrid"><div class="plan"><strong>Plan A</strong>${p.A}</div><div class="plan"><strong>Plan B</strong>${p.B}</div><div class="plan"><strong>Plan C</strong>${p.C}</div><div class="plan"><strong>Plan D</strong>${p.D}</div></div></div>
+    <div class="panel"><h3>Cognitive forcing prompts</h3><ul><li>What exactly makes this airway difficult — anatomy, physiology, pathology, environment, or all four?</li><li>What is the first point at which we stop and change plan?</li><li>If mask ventilation fails, who does what in the next 60 seconds?</li><li>Is this the right room, right team and right time?</li><li>What is the extubation or post-procedure airway plan?</li></ul></div>
+    ${notesBlock()}${disclaimerBlock()}${refsBlock()}${logicBlock()}`;
+}
+function notesBlock(){const n=document.getElementById('notes').value.trim();return n?`<div class="panel"><h3>Team notes</h3><p>${escapeHtml(n).replace(/\n/g,'<br>')}</p></div>`:''}
+function disclaimerBlock(){return `<div class="panel"><div class="disclaimer"><strong>Governance / safety statement</strong><br>This prototype does not determine airway management and is not a substitute for senior clinical judgement, local policy or formal Difficult Airway Society algorithms. It is a structured discussion aid designed to make patient risk, rescue options, team skill mix, equipment, location and escalation thresholds explicit. It should not be used for live clinical care unless formally reviewed, approved and version-controlled through local governance.</div></div>`}
+function refsBlock(){return `<div class="panel refs"><h3>Reference sources for governance review</h3><ul><li><a href="https://das.uk.com/guidelines/das-guidelines-for-awake-tracheal-intubation-ati-in-adults/" target="_blank">DAS awake tracheal intubation guidelines in adults</a></li><li><a href="https://database.das.uk.com/guidelines/das_intubation_guidelines" target="_blank">DAS unanticipated difficult intubation guidelines in adults 2015</a></li><li><a href="https://database.das.uk.com/guidelines/icu_guidelines2017" target="_blank">DAS guidelines for tracheal intubation in critically ill adults</a></li><li><a href="https://das.uk.com/guidelines/das-extubation-guidelines1/" target="_blank">DAS management of tracheal extubation guidelines</a></li></ul></div>`}
+function logicBlock(){return `<div class="panel logicBlock"><h3>Logic inspector</h3><div class="logic">Patient risk = oxygenation + laryngoscopy + rescue oxygenation + aspiration + FONA + phenotype modifiers.\nEnvironment risk = urgency + location + senior operator + kit + backup + time/system pressure + post-procedure destination.\nRed output = patient risk ≥8 OR environment risk ≥7 OR combined ≥13.\nAmber output = patient risk ≥5 OR environment risk ≥4 OR combined ≥8.\nBlack output = immediate threat + poor rescue/high physiological risk + absent kit.\n\nThis is deliberately editable prototype logic, not validated scoring.</div></div>`}
+function escapeHtml(str){return str.replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function resetAll(){buildChoices();document.getElementById('notes').value='';render()}
+document.addEventListener('change',e=>{
+  if(e.target.id==='scenario'){
+    const v=e.target.value; document.getElementById('anticipatedInputs').classList.toggle('hidden',v!=='anticipated'); document.getElementById('scaffoldInputs').classList.toggle('hidden',!v||v==='anticipated');
+  }
+  if(e.target.name==='phenotype' && e.target.value==='none' && e.target.checked){document.querySelectorAll('input[name="phenotype"]').forEach(x=>{if(x.value!=='none')x.checked=false})}
+  if(e.target.name==='phenotype' && e.target.value!=='none' && e.target.checked){const none=document.querySelector('input[name="phenotype"][value="none"]'); if(none) none.checked=false}
+  render();
+});
+document.addEventListener('input', render);
+document.getElementById('resetBtn')?.addEventListener('click',resetAll);
+document.getElementById('printBtn')?.addEventListener('click',()=>window.print());
+buildChoices();render();
+</script>
+</body>
+</html>
